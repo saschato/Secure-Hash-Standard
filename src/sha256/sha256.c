@@ -1,9 +1,10 @@
 #include "sha256.h"
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
 
-#define ROTL(x,n) ((x << n) | (x >> 32 - n))
-#define ROTR(x,n) ((x >> n) | (x << 32 - n))
+#define ROTL(x,n) ((x << n) | (x >> (32 - n)))
+#define ROTR(x,n) ((x >> n) | (x << (32 - n)))
 
 #define SHL(x,n) (x << n)
 #define SHR(x,n) (x >> n)
@@ -47,7 +48,8 @@ void initState(sha256State_t *state) {
 	state->H[5]=0x9b05688c;
 	state->H[6]=0x1f83d9ab;
 	state->H[7]=0x5be0cd19;
-
+	
+	state->length = 0;
 	state->finalised = 0;
 }
 
@@ -59,6 +61,7 @@ void sha256Padding(sha256State_t *state) {
 		sha256(state);
 		memset(state->message, 0x00, 16 * sizeof(uint32_t));
 	}
+
 	state->finalised = 1;
 	state->message[14] = state->length >> 32;
 	state->message[15] = state->length & 0xffffffff;
