@@ -127,7 +127,7 @@ void finalise(sha256State_t *state) {
 	}
 
 	for (int i = 0; i < 8; i++) {
-		printf("%02x", state->H[i]);
+		printf("%08x", state->H[i]);
 	}
 	printf("\n");
 }
