@@ -33,6 +33,7 @@ int main(int argc, char **argv) {
 	while((b_len = fread(buffer, sizeof(uint8_t), BUFFSIZE, file))) {
 		state.length += b_len;
 		sha256(&state, buffer, b_len);
+        memset(buffer, 0x00, BUFFSIZE);
 	}
     sha256Finalise(&state);
 
