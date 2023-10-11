@@ -4,8 +4,9 @@
 #include <stdint.h>
 
 typedef struct sha256State {
+	uint32_t W[64];
+	uint32_t message[16];
         uint32_t H[8];
-        uint32_t message[16];
         uint32_t message_length;
         uint64_t length;
         uint8_t finalised;

@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
 	uint8_t buffer[64] = {0};
 	while((state.message_length = fread(buffer, sizeof(uint8_t), 64, file))) {
 		to_uint32(buffer, state.message);
-		state.length += state.message_length * 8;
+		state.length += state.message_length;
 		sha256(&state);
 		memset(&state.message, 0x00, 16*sizeof(uint32_t));
 		memset(&buffer, 0x00, 64*sizeof(uint8_t));
