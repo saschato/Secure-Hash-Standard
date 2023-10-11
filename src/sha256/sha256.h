@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#define BUFFSIZE 16384
+
 typedef struct sha256State {
 	uint32_t W[64];
 	uint32_t message[16];
@@ -14,8 +16,8 @@ typedef struct sha256State {
 
 void initState(sha256State_t *state);
 
-void sha256(sha256State_t *state);
+void sha256(sha256State_t *state, uint8_t *buffer, uint32_t b_len);
 
-void finalise(sha256State_t *state);
+void sha256Finalise(sha256State_t *state);
 
 #endif

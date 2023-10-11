@@ -12,6 +12,8 @@
 #define Ch(x,y,z) ((x & y) ^ (~x&z))
 #define Maj(x,y,z) ((x & y) ^ (x & z) ^ (y & z))
 
+#define MSIZE 64
+
 static inline uint32_t Sigma0(uint32_t x) {
     return ROTR(x,2) ^ ROTR(x,13) ^ ROTR(x,22);
 }
@@ -26,6 +28,12 @@ static inline uint32_t sigma0(uint32_t x) {
 
 static inline uint32_t sigma1(uint32_t x) {
 	return ROTR(x,17) ^ ROTR(x,19) ^ SHR(x,10);
+}
+
+static inline void to_uint32(uint8_t buffer[64], uint32_t buff[16]) {
+    for (int i = 0; i < 64; i+=4) {
+        buff[i/4] = buffer[i] << 24 | buffer[i+1] << 16 | buffer[i+2] << 8 | buffer[i+3];
+    }
 }
 
 const uint32_t K[64] = {
@@ -53,22 +61,24 @@ void initState(sha256State_t *state) {
 	state->finalised = 0;
 }
 
+void sha256Round(sha256State_t *state);
+
 void sha256Padding(sha256State_t *state) {
 	state->message[state->message_length / 4] |= 0x80 << (3 - (state->message_length % 4)) * 8;
 
 	if (state->message_length * 8 + 1 > 448) {
 		state->message_length=64;
-		sha256(state);
+		sha256Round(state);
 		memset(state->message, 0x00, 16 * sizeof(uint32_t));
 	}
 
 	state->finalised = 1;
-	state->length *= 8;
+	state->length <<= 3;
 	state->message[14] = state->length >> 32;
 	state->message[15] = state->length & 0xffffffff;
 }
 
-void sha256(sha256State_t *state) {
+void sha256Round(sha256State_t *state) {
 	uint32_t T1, T2;
 	uint32_t a, b, c, d, e, f, g, h;
 
@@ -114,14 +124,29 @@ void sha256(sha256State_t *state) {
     state->H[7] += h;
 }
 
-void finalise(sha256State_t *state) {
+void sha256(sha256State_t *state, uint8_t *buffer, uint32_t b_len) {
+    size_t message_length = 0;
+    while(b_len > 0) {
+        message_length = (b_len < MSIZE) ? b_len : MSIZE;
+        memset(state->message, 0x00, MSIZE);
+        to_uint32(buffer, state->message);
+
+        state->message_length = message_length;
+        sha256Round(state);
+
+        buffer += message_length;
+        b_len -= message_length;
+    }
+}
+
+void sha256Finalise(sha256State_t *state) {
 	if(!state->finalised) {
 		memset(state->message, 0x00, 16*sizeof(uint32_t));
 		state->message[0] = 0x80000000;
 		state->message[14] = state->length >> 32;
 		state->message[15] = state->length & 0xffffffff;
 		state->finalised = 1;
-		sha256(state);
+		sha256Round(state);
 	}
 
 	for (int i = 0; i < 8; i++) {
